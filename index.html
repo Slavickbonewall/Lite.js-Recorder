@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grabadora Optimizada</title>
+    <style>
+        body {
+            background-color: #000; /* Fondo negro */
+            color: #0f0; /* Texto verde */
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            background-color: #111; /* Fondo ligeramente más claro para el contenedor */
+            border-radius: 10px;
+            box-shadow: 0 0 20px #0f0; /* Sombra verde para el contenedor */
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            margin: 0;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0; /* Efecto de neón verde */
+        }
+
+        h3 {
+            margin-top: 20px;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0; /* Efecto de neón verde */
+        }
+
+        button {
+            background-color: #0f0; /* Botones verdes */
+            color: #000; /* Texto negro en botones */
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #0f0; /* Efecto de neón en botones */
+            transition: background-color 0.3s, box-shadow 0.3s;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #0c0; /* Cambiar a verde más oscuro al pasar el ratón */
+            box-shadow: 0 0 15px #0c0;
+        }
+
+        button:disabled {
+            background-color: #333; /* Fondo gris para botones deshabilitados */
+            color: #666; /* Texto gris para botones deshabilitados */
+            cursor: default; /* Cursor normal para botones deshabilitados */
+            box-shadow: none; /* Eliminar el efecto de neón para botones deshabilitados */
+        }
+
+        button:disabled:hover {
+            background-color: #333; /* Mantener el fondo gris al pasar el ratón */
+            box-shadow: none; /* Mantener sin efecto de neón */
+        }
+
+        form {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px; /* Espacio entre cada elemento del grupo */
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 18px;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+            cursor: pointer;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            appearance: none;
+            background-color: #333; /* Fondo oscuro para el checkbox/radio */
+            border: 2px solid #0f0; /* Borde verde para el checkbox/radio */
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+        }
+
+        input[type="radio"]:checked::before, input[type="checkbox"]:checked::before {
+            content: "";
+            display: block;
+            width: 12px;
+            height: 12px;
+            background-color: #0f0; /* Marca verde cuando está seleccionado */
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        input[type="radio"]:disabled, input[type="checkbox"]:disabled {
+            background-color: #666; /* Fondo gris para checkbox/radio deshabilitados */
+            border-color: #444; /* Borde gris para checkbox/radio deshabilitados */
+            cursor: default; /* Cursor normal para checkbox/radio deshabilitados */
+        }
+
+        #previewContainer {
+            margin-top: 20px;
+        }
+
+        #preview {
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+            border: 2px solid #0f0; /* Borde verde alrededor del video */
+            background-color: #000; /* Fondo negro en el contenedor de vista previa */
+        }
+
+        #previewCheckbox {
+            margin-right: 10px;
+        }
+
+        @media (max-width: 600px) {
+            button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Lite.js Recorder</h1>
+        <button id="startButton">Comenzar</button>
+        <button id="stopButton" disabled>Detener</button>
+        <div>
+            <h3>Configuración de Audio</h3>
+            <form>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="audio" value="none" checked>
+                        Sin Audio
+                    </label>
+                    <label>
+                        <input type="radio" name="audio" value="internal">
+                        Audio Interno
+                    </label>
+                    <label>
+                        <input type="radio" name="audio" value="external">
+                        Audio Externo
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="previewCheckbox">
+                Mostrar Vista Previa
+            </label>
+        </div>
+        <div id="previewContainer">
+            <video id="preview" autoplay muted></video>
+        </div>
+    </div>
+    <script type="module">
+        let mediaRecorder;
+        let mediaStream;
+        let recordedChunks = [];
+        let previewEnabled = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const startButton = document.getElementById('startButton');
+            const stopButton = document.getElementById('stopButton');
+            const audioOptions = document.getElementsByName('audio');
+            const previewCheckbox = document.getElementById('previewCheckbox');
+            const preview = document.getElementById('preview');
+
+            async function startRecording() {
+                try {
+                    let audioStream = null;
+                    let videoStream = null;
+
+                    for (const option of audioOptions) {
+                        if (option.checked) {
+                            switch (option.value) {
+                                case 'internal':
+                                    audioStream = await navigator.mediaDevices.getDisplayMedia({
+                                        audio: { mediaSource: 'application' }
+                                    });
+                                    break;
+                                case 'external':
+                                    audioStream = await navigator.mediaDevices.getUserMedia({
+                                        audio: true
+                                    });
+                                    break;
+                                case 'none':
+                                default:
+                                    audioStream = null;
+                                    break;
+                            }
+                        }
+                    }
+
+                    videoStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: { frameRate: 30 }
+                    });
+
+                    if (audioStream) {
+                        mediaStream = new MediaStream([
+                            ...videoStream.getVideoTracks(),
+                            ...audioStream.getAudioTracks()
+                        ]);
+                    } else {
+                        mediaStream = videoStream;
+                    }
+
+                    mediaRecorder = new MediaRecorder(mediaStream, {
+                        mimeType: 'video/webm; codecs=vp9',
+                        videoBitsPerSecond: 2.5 * 1024 * 1024,
+                        audioBitsPerSecond: 128 * 1024
+                    });
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) recordedChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                        const url = URL.createObjectURL(blob);
+                        recordedChunks = [];
+
+                        const fileName = prompt("Ingresa el nombre del archivo:", "grabacion");
+
+                        if (fileName) {
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = `${fileName}.webm`;
+                            link.style.display = 'none';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }
+
+                        URL.revokeObjectURL(url);
+                    };
+
+                    mediaRecorder.start(100);
+
+                    // Deshabilitar el botón de comenzar, los radios y la casilla de vista previa
+                    startButton.disabled = true;
+                    stopButton.disabled = false;
+                    document.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                    document.querySelectorAll('input[type="checkbox"]').forEach(input => input.disabled = input.id !== 'previewCheckbox');
+
+                    if (previewEnabled) {
+                        preview.srcObject = mediaStream;
+                        preview.play();
+                    }
+
+                    mediaStream.getVideoTracks()[0].addEventListener("ended", () => mediaRecorder.stop());
+                } catch (error) {
+                    console.error("Error al iniciar la grabación:", error);
+                }
+            }
+
+            function stopRecording() {
+                if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+                if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+
+                // Habilitar el botón de comenzar y deshabilitar el de detener
+                startButton.disabled = false;
+                stopButton.disabled = true;
+
+                // Habilitar los radios y la casilla de vista previa
+                document.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = false);
+                document.querySelectorAll('input[type="checkbox"]').forEach(input => input.disabled = false);
+            }
+
+            startButton.addEventListener('click', startRecording);
+            stopButton.addEventListener('click', stopRecording);
+
+            previewCheckbox.addEventListener('change', () => {
+                previewEnabled = previewCheckbox.checked;
+                if (previewEnabled && mediaStream) {
+                    preview.srcObject = mediaStream;
+                    preview.play();
+                } else {
+                    preview.srcObject = null;
+                    preview.pause();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
