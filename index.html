@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="lite.ico">
-    <title>Lite.js Recorder</title>
+    <title>Lite.js MiniRecorder</title>
     <style>
         body {
             background-color: #000; 
@@ -152,24 +152,25 @@
 
 <body>
     <div class="container">
-        <h1>Lite.js Recorder</h1>
-        <button id="startButton">Comenzar</button>
-        <button id="stopButton" disabled>Detener</button>
+        <h1>Lite.js MiniRecorder</h1>
+        <p>By vladislavByte</p>
+        <button id="startButton">Record</button>
+        <button id="stopButton" disabled>Stop</button>
         <div>
-            <h3>Configuración de Audio</h3>
+            <h3>Audio Settings</h3>
             <form>
                 <div class="form-group">
                     <label>
                         <input type="radio" name="audio" value="none" checked>
-                        Sin Audio
+                        No Audio
                     </label>
                     <label>
                         <input type="radio" name="audio" value="internal">
-                        Audio Interno
+                        Internal Audio
                     </label>
                     <label>
                         <input type="radio" name="audio" value="external">
-                        Audio Externo
+                        External Audio
                     </label>
                 </div>
             </form>
@@ -177,7 +178,7 @@
         <div class="form-group">
             <label>
                 <input type="checkbox" id="previewCheckbox">
-                Mostrar Vista Previa
+                Show Preview
             </label>
         </div>
         <div id="previewContainer">
